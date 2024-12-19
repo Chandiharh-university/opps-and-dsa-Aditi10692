@@ -1,0 +1,44 @@
+#include <iostream>
+using namespace std;
+
+void passByValue(int value) {
+    value += 10; // Adding 10 to the value
+    cout << "Inside passByValue: " << value << endl;
+}
+
+void passByReference(int &ref) {
+    ref += 10; // Adding 10 to the original reference
+    cout << "Inside passByReference: " << ref << endl;
+}
+
+void staticExample() {
+    static int count = 0;
+    count++;
+    cout << "Static count: " << count << endl;
+}
+
+int main() {
+    int num1, num2;
+
+    // Input user-defined numbers
+    cout << "Enter two numbers: ";
+    cin >> num1 >> num2;
+
+    // Add the two numbers and display the result
+    int sum = num1 + num2;
+    cout << "\nSum of the numbers: " << sum << endl;
+
+    // Pass by value
+    passByValue(num1);
+    cout << "After passByValue: " << num1 << endl;
+
+    // Pass by reference
+    passByReference(num2);
+    cout << "After passByReference: " << num2 << endl;
+
+    // Static variable behavior
+    staticExample();
+    staticExample();
+
+    return 0;
+}

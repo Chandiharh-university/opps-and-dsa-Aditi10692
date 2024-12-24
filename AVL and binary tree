@@ -1,0 +1,170 @@
+#include <iostream>
+#include <queue>
+#include <algorithm>
+using namespace std;
+
+// Definition of the Node structure
+struct Node {
+    int data;
+    Node* left;
+    Node* right;
+
+    // Constructor to initialize a node
+    Node(int value) {
+        data = value;
+        left = right = nullptr;
+    }
+};
+
+// Insert into a binary tree (no balancing)
+Node* insertBinaryTree(Node* root, int value) {
+    if (root == nullptr) {
+        return new Node(value);
+    }
+    queue<Node*> q;
+    q.push(root);
+
+    while (!q.empty()) {
+        Node* current = q.front();
+        q.pop();
+
+        if (current->left == nullptr) {
+            current->left = new Node(value);
+            break;
+        } else {
+            q.push(current->left);
+        }
+
+        if (current->right == nullptr) {
+            current->right = new Node(value);
+            break;
+        } else {
+            q.push(current->right);
+        }
+    }
+    return root;
+}
+
+// Function to get height of a tree
+int getHeight(Node* root) {
+    if (root == nullptr) {
+        return 0;
+    }
+    return 1 + max(getHeight(root->left), getHeight(root->right));
+}
+
+// Get balance factor of a node
+int getBalanceFactor(Node* root) {
+    if (root == nullptr) {
+        return 0;
+    }
+    return getHeight(root->left) - getHeight(root->right);
+}
+
+// Right rotate utility for AVL Tree
+Node* rightRotate(Node* y) {
+    Node* x = y->left;
+    Node* T2 = x->right;
+
+    // Perform rotation
+    x->right = y;
+    y->left = T2;
+
+    return x;
+}
+
+// Left rotate utility for AVL Tree
+Node* leftRotate(Node* x) {
+    Node* y = x->right;
+    Node* T2 = y->left;
+
+    // Perform rotation
+    y->left = x;
+    x->right = T2;
+
+    return y;
+}
+
+// Insert into AVL Tree
+Node* insertAVLTree(Node* root, int value) {
+    // Step 1: Perform normal BST insertion
+    if (root == nullptr) {
+        return new Node(value);
+    }
+    if (value < root->data) {
+        root->left = insertAVLTree(root->left, value);
+    } else if (value > root->data) {
+        root->right = insertAVLTree(root->right, value);
+    } else {
+        return root; // Duplicates are not allowed
+    }
+
+    // Step 2: Update balance factor and balance the tree
+    int balance = getBalanceFactor(root);
+
+    // Left-Left case
+    if (balance > 1 && value < root->left->data) {
+        return rightRotate(root);
+    }
+
+    // Right-Right case
+    if (balance < -1 && value > root->right->data) {
+        return leftRotate(root);
+    }
+
+    // Left-Right case
+    if (balance > 1 && value > root->left->data) {
+        root->left = leftRotate(root->left);
+        return rightRotate(root);
+    }
+
+    // Right-Left case
+    if (balance < -1 && value < root->right->data) {
+        root->right = rightRotate(root->right);
+        return leftRotate(root);
+    }
+
+    return root;
+}
+
+// In-order traversal for displaying the tree
+void inOrderTraversal(Node* root) {
+    if (root != nullptr) {
+        inOrderTraversal(root->left);
+        cout << root->data << " ";
+        inOrderTraversal(root->right);
+    }
+}
+
+// Main function
+int main() {
+    Node* binaryTree = nullptr;
+
+    // Insert into the binary tree
+    binaryTree = insertBinaryTree(binaryTree, 10);
+    binaryTree = insertBinaryTree(binaryTree, 20);
+    binaryTree = insertBinaryTree(binaryTree, 30);
+    binaryTree = insertBinaryTree(binaryTree, 40);
+    binaryTree = insertBinaryTree(binaryTree, 50);
+    binaryTree = insertBinaryTree(binaryTree, 25);
+
+    cout << "In-order traversal of the Binary Tree: ";
+    inOrderTraversal(binaryTree);
+    cout << endl;
+
+    Node* avlTree = nullptr;
+
+    // Insert into the AVL tree
+    avlTree = insertAVLTree(avlTree, 10);
+    avlTree = insertAVLTree(avlTree, 20);
+    avlTree = insertAVLTree(avlTree, 30);
+    avlTree = insertAVLTree(avlTree, 40);
+    avlTree = insertAVLTree(avlTree, 50);
+    avlTree = insertAVLTree(avlTree, 25);
+
+    cout << "In-order traversal of the AVL Tree: ";
+    inOrderTraversal(avlTree);
+    cout << endl;
+
+    return 0;
+}

@@ -1,0 +1,89 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+// Structure to represent an edge
+struct Edge {
+    int u, v, weight;
+};
+
+// Comparator function for sorting edges based on weight
+bool compareEdges(const Edge& e1, const Edge& e2) {
+    return e1.weight < e2.weight;
+}
+
+// Function to find the parent of a node in the disjoint set
+int findParent(int node, vector<int>& parent) {
+    if (parent[node] == node)
+        return node;
+    return parent[node] = findParent(parent[node], parent); // Path compression
+}
+
+// Function to perform union of two subsets
+void unionSets(int u, int v, vector<int>& parent, vector<int>& rank) {
+    int rootU = findParent(u, parent);
+    int rootV = findParent(v, parent);
+
+    if (rootU != rootV) {
+        if (rank[rootU] > rank[rootV]) {
+            parent[rootV] = rootU;
+        } else if (rank[rootU] < rank[rootV]) {
+            parent[rootU] = rootV;
+        } else {
+            parent[rootV] = rootU;
+            rank[rootU]++;
+        }
+    }
+}
+
+// Kruskal's Algorithm to find the MST
+void kruskalMST(int vertices, vector<Edge>& edges) {
+    // Sort edges by weight
+    sort(edges.begin(), edges.end(), compareEdges);
+
+    vector<int> parent(vertices);
+    vector<int> rank(vertices, 0);
+
+    // Initialize disjoint sets
+    for (int i = 0; i < vertices; i++) {
+        parent[i] = i;
+    }
+
+    vector<Edge> mst; // Store the edges in the MST
+    int mstWeight = 0;
+
+    // Process each edge
+    for (const Edge& edge : edges) {
+        if (findParent(edge.u, parent) != findParent(edge.v, parent)) {
+            mst.push_back(edge); // Include the edge in MST
+            mstWeight += edge.weight;
+            unionSets(edge.u, edge.v, parent, rank);
+        }
+    }
+
+    // Output the MST
+    cout << "Edges in the MST:\n";
+    for (const Edge& edge : mst) {
+        cout << edge.u << " - " << edge.v << "    Weight: " << edge.weight << endl;
+    }
+    cout << "Total Weight of MST: " << mstWeight << endl;
+}
+
+int main() {
+    int vertices, edgesCount;
+    cout << "Enter the number of vertices and edges: ";
+    cin >> vertices >> edgesCount;
+
+    vector<Edge> edges(edgesCount);
+
+    cout << "Enter the edges (u v weight):" << endl;
+    for (int i = 0; i < edgesCount; i++) {
+        cin >> edges[i].u >> edges[i].v >> edges[i].weight;
+    }
+
+    kruskalMST(vertices, edges);
+
+    return 0;
+}

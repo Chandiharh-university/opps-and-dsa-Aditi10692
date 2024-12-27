@@ -1,0 +1,135 @@
+import requests
+import matplotlib.pyplot as plt
+from collections import defaultdict
+import heapq
+
+class CryptoPortfolioAnalyzer:
+    def __init__(self):
+        # Portfolio dictionary: {symbol: {"quantity": x, "price": y}}
+        self.portfolio = defaultdict(lambda: {"quantity": 0, "price": 0})
+        self.api_url = "https://api.coingecko.com/api/v3/simple/price"
+
+    def add_to_portfolio(self):
+        """Add cryptocurrencies to the portfolio using user input."""
+        while True:
+            try:
+                symbol = input("Enter the cryptocurrency symbol (e.g., 'bitcoin', 'ethereum'): ").lower()
+                quantity = float(input(f"Enter the quantity of {symbol.upper()}: "))
+                buy_price = float(input(f"Enter the purchase price per unit of {symbol.upper()} (in USD): "))
+                self.portfolio[symbol]["quantity"] += quantity
+                self.portfolio[symbol]["price"] = buy_price
+                print(f"Added {quantity} {symbol.upper()} to portfolio at ${buy_price}/unit.")
+            except ValueError:
+                print("Invalid input. Please enter numeric values for quantity and price.")
+
+            more = input("Do you want to add another cryptocurrency? (yes/no): ").strip().lower()
+            if more != "yes":
+                break
+
+    def fetch_real_time_prices(self):
+        """Fetch real-time prices from the API."""
+        if not self.portfolio:
+            print("No cryptocurrencies in the portfolio yet.")
+            return {}
+        
+        symbols = ",".join(self.portfolio.keys())
+        params = {"ids": symbols, "vs_currencies": "usd"}
+        response = requests.get(self.api_url, params=params)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print("Error fetching data from API.")
+            return {}
+
+    def calculate_portfolio_value(self):
+        """Calculate total portfolio value."""
+        prices = self.fetch_real_time_prices()
+        if not prices:
+            return
+
+        total_value = 0
+
+        print("\nPortfolio Overview:")
+        print(f"{'Symbol':<10}{'Quantity':<10}{'Current Price':<15}{'Value':<10}")
+        print("-" * 45)
+
+        for symbol, data in self.portfolio.items():
+            quantity = data["quantity"]
+            current_price = prices.get(symbol, {}).get("usd", 0)
+            value = quantity * current_price
+            total_value += value
+
+            print(f"{symbol.upper():<10}{quantity:<10}{current_price:<15}${value:<10.2f}")
+
+        print(f"\nTotal Portfolio Value: ${total_value:.2f}")
+        return total_value
+
+    def visualize_portfolio(self):
+        """Visualize portfolio allocation."""
+        prices = self.fetch_real_time_prices()
+        if not prices:
+            return
+
+        allocations = {}
+
+        for symbol, data in self.portfolio.items():
+            current_price = prices.get(symbol, {}).get("usd", 0)
+            allocations[symbol.upper()] = data["quantity"] * current_price
+
+        # Plot Pie Chart
+        labels = list(allocations.keys())
+        sizes = list(allocations.values())
+        plt.figure(figsize=(8, 8))
+        plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
+        plt.title("Portfolio Allocation")
+        plt.show()
+
+    def recommend_diversification(self):
+        """Recommend diversification based on portfolio balance."""
+        heap = []
+        prices = self.fetch_real_time_prices()
+        if not prices:
+            return
+
+        for symbol, data in self.portfolio.items():
+            current_price = prices.get(symbol, {}).get("usd", 0)
+            value = data["quantity"] * current_price
+            heapq.heappush(heap, (-value, symbol))  # Max-Heap by Value
+
+        print("\nTop Holdings:")
+        for _ in range(min(3, len(heap))):
+            value, symbol = heapq.heappop(heap)
+            print(f"{symbol.upper()} with Value: ${-value:.2f}")
+
+        print("\nConsider redistributing into smaller holdings or diversifying into less volatile assets.")
+
+# Main Program
+if __name__ == "__main__":
+    analyzer = CryptoPortfolioAnalyzer()
+
+    print("Welcome to the Cryptocurrency Portfolio Analyzer!")
+    
+    while True:
+        print("\nWhat would you like to do?")
+        print("1. Add cryptocurrency to portfolio")
+        print("2. View portfolio value")
+        print("3. Visualize portfolio allocation")
+        print("4. Get diversification recommendations")
+        print("5. Exit")
+        
+        choice = input("Enter your choice (1-5): ").strip()
+        
+        if choice == "1":
+            analyzer.add_to_portfolio()
+        elif choice == "2":
+            analyzer.calculate_portfolio_value()
+        elif choice == "3":
+            analyzer.visualize_portfolio()
+        elif choice == "4":
+            analyzer.recommend_diversification()
+        elif choice == "5":
+            print("Thank you for using the Cryptocurrency Portfolio Analyzer. Goodbye!")
+            break
+        else:
+            print("Invalid choice. Please enter a number between 1 and 5.")

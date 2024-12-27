@@ -1,0 +1,63 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <climits>
+
+using namespace std;
+
+// Function to find the MST using Prim's Algorithm
+void primMST(int vertices, vector<vector<pair<int, int>>>& adjList) {
+    vector<int> key(vertices, INT_MAX); // To store the minimum edge weight for each vertex
+    vector<bool> inMST(vertices, false); // To check if a vertex is in MST
+    vector<int> parent(vertices, -1);   // To store the MST structure
+
+    // Min-heap to store {key, vertex} pairs
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+
+    key[0] = 0; // Start from vertex 0
+    pq.push({0, 0}); // {key, vertex}
+
+    while (!pq.empty()) {
+        int u = pq.top().second; // Extract the vertex with the smallest key
+        pq.pop();
+
+        if (inMST[u]) continue; // Skip if already included in MST
+        inMST[u] = true;
+
+        // Traverse all adjacent vertices
+        for (auto& [v, weight] : adjList[u]) {
+            if (!inMST[v] && weight < key[v]) {
+                key[v] = weight;    // Update the key value
+                parent[v] = u;      // Update the parent
+                pq.push({key[v], v}); // Push the updated vertex into the priority queue
+            }
+        }
+    }
+
+    // Print the MST
+    cout << "Edge   Weight\n";
+    for (int i = 1; i < vertices; i++) {
+        cout << parent[i] << " - " << i << "    " << key[i] << endl;
+    }
+}
+
+int main() {
+    int vertices, edges;
+    cout << "Enter the number of vertices and edges: ";
+    cin >> vertices >> edges;
+
+    // Create an adjacency list for the graph
+    vector<vector<pair<int, int>>> adjList(vertices);
+
+    cout << "Enter the edges (u v weight):" << endl;
+    for (int i = 0; i < edges; i++) {
+        int u, v, weight;
+        cin >> u >> v >> weight;
+        adjList[u].push_back({v, weight});
+        adjList[v].push_back({u, weight}); // For undirected graph
+    }
+
+    primMST(vertices, adjList);
+
+    return 0;
+}
